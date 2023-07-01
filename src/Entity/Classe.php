@@ -15,17 +15,17 @@ class Classe
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getClasses", "getCours"])]
+    #[Groups(["getClasses", "getCours", "getParticipe"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getClasses", "getCours"])]
+    #[Groups(["getClasses", "getCours", "getParticipe"])]
     #[Assert\NotBlank(message: "Le nom de la classe est obligatoire")]
     #[Assert\Length(min: 1, max: 255, minMessage: "Le nom de la classe doit faire au moins {{ limit }} caractères", maxMessage: "Le nom de la classe ne peut pas faire plus de {{ limit }} caractères")]
     private ?string $nom = null;
 
     #[ORM\ManyToOne(inversedBy: 'classes')]
-    #[Groups(["getClasses", "getCours"])]
+    #[Groups(["getClasses", "getCours", "getParticipe"])]
     private ?Ecole $ecole = null;
 
     #[ORM\ManyToMany(targetEntity: Utilisateurs::class, inversedBy: 'classes')]

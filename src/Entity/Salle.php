@@ -15,17 +15,17 @@ class Salle
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getSalles", "getCours"])]
+    #[Groups(["getSalles", "getCours", "getParticipe"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255, nullable:false)]
-    #[Groups(["getSalles", "getCours"])]
+    #[Groups(["getSalles", "getCours", "getParticipe"])]
     #[Assert\NotBlank(message: "Le nom de la salle est obligatoire")]
     #[Assert\Length(min: 1, max: 255, minMessage: "Le nom de la salle doit faire au moins {{ limit }} caractères", maxMessage: "Le nom de la classe ne peut pas faire plus de {{ limit }} caractères")]
     private ?string $salle = null;
 
     #[ORM\Column(length: 255, nullable:true)]
-    #[Groups(["getSalles", "getCours"])]
+    #[Groups(["getSalles", "getCours", "getParticipe"])]
     private ?string $lecteur = null;
 
     #[ORM\OneToMany(mappedBy: 'salle', targetEntity: Cours::class)]

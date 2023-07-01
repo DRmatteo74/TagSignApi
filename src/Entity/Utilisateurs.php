@@ -17,7 +17,7 @@ class Utilisateurs implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getUser"])]
+    #[Groups(["getUser", "getParticipe"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
@@ -27,13 +27,13 @@ class Utilisateurs implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $login = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getUser"])]
+    #[Groups(["getUser", "getParticipe"])]
     #[Assert\NotBlank(message: "Le nom de l'utilisateur est obligatoire")]
     #[Assert\Length(min: 1, max: 255, minMessage: "Le nom de l'utilisateur doit faire au moins {{ limit }} caractères", maxMessage: "Le nom de l'utilisateur ne peut pas faire plus de {{ limit }} caractères")]
     private ?string $nom = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getUser"])]
+    #[Groups(["getUser", "getParticipe"])]
     #[Assert\NotBlank(message: "Le prenom de l'utilisateur est obligatoire")]
     #[Assert\Length(min: 1, max: 255, minMessage: "Le prenom de l'utilisateur doit faire au moins {{ limit }} caractères", maxMessage: "Le nom de l'utilisateur ne peut pas faire plus de {{ limit }} caractères")]
     private ?string $prenom = null;
@@ -54,7 +54,7 @@ class Utilisateurs implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $classes;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["getUser"])]
+    #[Groups(["getUser", "getParticipe"])]
     private ?string $badge = null;
 
     #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Participe::class)]

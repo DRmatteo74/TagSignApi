@@ -15,11 +15,11 @@ class Ecole
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getClasses", "getEcole", "getCours"])]
+    #[Groups(["getClasses", "getEcole", "getCours", "getParticipe"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255, unique: true)]
-    #[Groups(["getClasses", "getEcole", "getCours"])]
+    #[Groups(["getClasses", "getEcole", "getCours", "getParticipe"])]
     #[Assert\NotBlank(message: "Le nom de l'école est obligatoire")]
     #[Assert\Length(min: 1, max: 255, minMessage: "Le nom de l'école' doit faire au moins {{ limit }} caractères", maxMessage: "Le nom d'école ne peut pas faire plus de {{ limit }} caractères")]
     private ?string $nom = null;

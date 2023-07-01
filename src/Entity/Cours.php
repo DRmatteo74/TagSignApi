@@ -16,34 +16,34 @@ class Cours
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getCours"])]
+    #[Groups(["getCours", "getParticipe"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getCours"])]
+    #[Groups(["getCours", "getParticipe"])]
     #[Assert\NotBlank(message: "Le nom du cours est obligatoire")]
     #[Assert\Length(min: 1, max: 255, minMessage: "Le nom du coursdoit faire au moins {{ limit }} caractères", maxMessage: "Le nom du coursne peut pas faire plus de {{ limit }} caractères")]
     private ?string $nom = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    #[Groups(["getCours"])]
+    #[Groups(["getCours", "getParticipe"])]
     private ?\DateTimeInterface $date = null;
 
     #[ORM\Column(type: Types::TIME_MUTABLE, nullable: true)]
-    #[Groups(["getCours"])]
+    #[Groups(["getCours", "getParticipe"])]
     private ?\DateTimeInterface $heure = null;
 
     #[ORM\Column]
-    #[Groups(["getCours"])]
+    #[Groups(["getCours", "getParticipe"])]
     #[Assert\NotBlank(message: "Le booléen distanciel est obligatoire")]
     private ?bool $distanciel = null;
 
     #[ORM\ManyToOne(inversedBy: 'cours')]
-    #[Groups(["getCours"])]
+    #[Groups(["getCours", "getParticipe"])]
     private ?Salle $salle = null;
 
     #[ORM\ManyToOne(inversedBy: 'cours')]
-    #[Groups(["getCours"])]
+    #[Groups(["getCours", "getParticipe"])]
     private ?Classe $classe = null;
 
     #[ORM\OneToMany(mappedBy: 'cours', targetEntity: Participe::class)]
