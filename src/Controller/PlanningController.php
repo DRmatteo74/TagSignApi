@@ -18,18 +18,18 @@ use OpenApi\Annotations as OA;
 class PlanningController extends AbstractController
 {
     #[Route('/api/planning/{id}', name: 'api_planning', methods: ['GET'])]
-    public function getPlanning(int $id, UtilisateursRepository $utilisateursRepository, ParticipeRepository $participeRepository, ClasseRepository $classeRepository): JsonResponse
+    public function getPlanning(int $id, UtilisateursRepository $utilisateursRepository): JsonResponse
     {
         $user = $utilisateursRepository->find($id);
-    
+
         if (!$user) {
             return new JsonResponse(['error' => 'Utilisateur non trouvé.'], 404);
         }
-    
+
         $cours = $user->getParticipes()->map(function (Participe $participe) {
             return $participe->getCours();
         });
-    
+
         $coursData = [];
         foreach ($cours as $coursItem) {
             $coursData[] = [
@@ -42,7 +42,7 @@ class PlanningController extends AbstractController
                 'classe' => $coursItem->getClasse()->getNom(),
             ];
         }
-    
+
         return new JsonResponse($coursData);
     }
 

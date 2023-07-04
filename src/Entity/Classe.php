@@ -29,6 +29,7 @@ class Classe
     private ?Ecole $ecole = null;
 
     #[ORM\ManyToMany(targetEntity: Utilisateurs::class, inversedBy: 'classes')]
+    #[Groups(["getClasses", "getCours", "getParticipe"])]
     private Collection $utilisateurs;
 
     #[ORM\OneToMany(mappedBy: 'classe', targetEntity: Cours::class)]

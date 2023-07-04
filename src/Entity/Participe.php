@@ -25,8 +25,7 @@ class Participe
     #[Groups(["getParticipe"])]
     private ?Utilisateurs $utilisateur = null;
 
-    #[ORM\Column]
-    #[Assert\NotBlank(message: "Le booléen presence est requis.")]
+    #[ORM\Column(nullable: true)]
     #[Groups(["getParticipe"])]
     private ?bool $presence = null;
 
@@ -40,7 +39,7 @@ class Participe
 
     #[ORM\Column(nullable: true)]
     #[Groups(["getParticipe"])]
-    private ?bool $justifie = null;
+    private ?bool $justificatifValide = null;
 
     public function getId(): ?int
     {
@@ -107,14 +106,14 @@ class Participe
         return $this;
     }
 
-    public function isJustifie(): ?bool
+    public function isJustificatifValide(): ?bool
     {
-        return $this->justifie;
+        return $this->justificatifValide;
     }
 
-    public function setJustifie(?bool $justifie): static
+    public function setJustificatifValide(?bool $justificatifValide): static
     {
-        $this->justifie = $justifie;
+        $this->justificatifValide = $justificatifValide;
 
         return $this;
     }
