@@ -47,6 +47,14 @@ class AppFixtures extends Fixture
         $user2->setPassword($this->userPasswordHasher->hashPassword($user2, "ap"));
         $manager->persist($user2);
 
+        $user3 = new Utilisateurs();
+        $user3->setLogin("prof");
+        $user3->setRoles(["ROLE_PROF"]);
+        $user3->setNom("PROF");
+        $user3->setPrenom("prof");
+        $user3->setPassword($this->userPasswordHasher->hashPassword($user3, "prof"));
+        $manager->persist($user3);
+
         // Génère des classes et des écoles
         $classeList = array("B-1", "B-2", "B-3", "M-1", "M-2");
         $ecoleList = array("ESGI", "ICAN");

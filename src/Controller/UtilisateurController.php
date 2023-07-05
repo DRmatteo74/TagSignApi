@@ -24,6 +24,12 @@ use OpenApi\Annotations as OA;
 
 class UtilisateurController extends AbstractController
 {
+    #[Route('/api/checkToken', name: 'checkToken', methods: ['GET'])]
+    public function checkToken(): JsonResponse
+    {
+        return new JsonResponse(Response::HTTP_OK);
+    }
+
     #[Route('/api/users', name: 'user', methods:['GET'])]
     public function getAllUsers(UtilisateursRepository $userRepository, SerializerInterface $serializer): JsonResponse
     {
