@@ -154,6 +154,7 @@ class CoursController extends AbstractController
         }
         
         // Récupérer les informations nécessaires du cours
+        $idCours = $prochainCours[0]->getId();
         $nomCours = $prochainCours[0]->getNom();
         $nomSalle = $prochainCours[0]->getSalle()->getSalle();
         $dateCours = $prochainCours[0]->getDate()->format('Y-m-d');
@@ -167,6 +168,7 @@ class CoursController extends AbstractController
         }
 
         return $this->json([
+            'id' => $idCours,
             'cours' => $nomCours,
             'salle' => $nomSalle,
             'date' => $dateCours,
