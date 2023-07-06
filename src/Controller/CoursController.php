@@ -200,7 +200,7 @@ class CoursController extends AbstractController
         return new JsonResponse($jsonCours, Response::HTTP_OK, ['accept' => 'json'], true);
     }
 
-    #[Route('/api/cours/getListEleve/{idCours}', name: 'getPresence', methods: ['GET'])]
+    #[Route('/api/cours/getListEleve/{idCours}', name: 'getListEleve', methods: ['GET'])]
     public function getListEleve($idCours, EntityManagerInterface $entityManager, ParticipeRepository $participeRepository, CoursRepository $coursRepository, UtilisateursRepository $utilisateursRepository, SerializerInterface $serializer): Response
     {
         // Récupérer l'utilisateur par son ID
@@ -210,9 +210,20 @@ class CoursController extends AbstractController
             return $this->json(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
         }
 
-        $participeCours = $cours->getClasse();
+        $participeCours = $cours->getClasse()->getUtilisateurs();
+
+        $utilisateurs = array();
+    
+        foreach($participeCours as $user){
+            $participe = $participeRepository->findOneBy(['cours' => $cours, 'utilisateur' => $user]);
+            $utilisateurs[] = [
+                'nom' => $user->getNom(),
+                'prenom' => $user->getPrenom(),
+                'presence' => $participe->isPresence(),
+            ];
+        }
         
-        $jsonCours = $serializer->serialize($participeCours, 'json', ['groups' => 'getParticipe']);
+        $jsonCours = $serializer->serialize($utilisateurs, 'json', ['groups' => 'getParticipe']);
         return new JsonResponse($jsonCours, Response::HTTP_OK, ['accept' => 'json'], true);
     }
 }
