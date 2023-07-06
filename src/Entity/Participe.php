@@ -14,7 +14,7 @@ class Participe
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getParticipe"])]
+    #[Groups(["getParticipe", "getPresence"])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'participes')]
@@ -22,15 +22,15 @@ class Participe
     private ?Cours $cours = null;
 
     #[ORM\ManyToOne(inversedBy: 'participes')]
-    #[Groups(["getParticipe"])]
+    #[Groups(["getParticipe", "getPresence"])]
     private ?Utilisateurs $utilisateur = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(["getParticipe"])]
+    #[Groups(["getParticipe", "getPresence"])]
     private ?bool $presence = null;
 
     #[ORM\Column(type: Types::TIME_MUTABLE, nullable: true)]
-    #[Groups(["getParticipe"])]
+    #[Groups(["getParticipe", "getPresence"])]
     private ?\DateTimeInterface $heure_badgeage = null;
 
     #[ORM\Column(length: 255, nullable: true)]

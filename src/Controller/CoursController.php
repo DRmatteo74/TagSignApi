@@ -5,7 +5,9 @@ namespace App\Controller;
 use App\Entity\Cours;
 use App\Repository\ClasseRepository;
 use App\Repository\CoursRepository;
+use App\Repository\ParticipeRepository;
 use App\Repository\SalleRepository;
+use App\Repository\UtilisateursRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -99,5 +101,100 @@ class CoursController extends AbstractController
         $em->persist($updatedCours);
         $em->flush();
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
+    }
+
+    #[Route('/api/cours/next/{idUser}', name: 'api_next_cours', methods: ['GET'])]
+    public function getNextCours($idUser, EntityManagerInterface $entityManager, ParticipeRepository $participeRepository, CoursRepository $coursRepository, UtilisateursRepository $utilisateursRepository, SerializerInterface $serializer): Response
+    {
+        // Récupérer l'utilisateur par son ID
+        $utilisateur = $utilisateursRepository->find($idUser);
+
+        if (!$utilisateur) {
+            return $this->json(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Récupérer la date et l'heure actuelles
+        $timezone = new \DateTimeZone('Europe/Paris');
+
+        $now = new \DateTime('now', $timezone);
+        $heure = $now->format('H:i:s');
+
+        $participeCours = $utilisateur->getParticipes();
+
+        // Récupérer le prochain cours pour l'utilisateur
+        $prochainCours  = array();
+        
+        foreach ($participeCours as $p) {
+            $cours = $p->getCours();
+            $coursDate = $cours->getDate();
+            $coursHeure = $cours->getHeure();
+        
+            if ($coursDate->format('Y-m-d') === $now->format('Y-m-d')) {
+                $coursHeureLimite = clone $coursHeure;
+                $coursHeureLimite->modify('+1 hour 30 minutes');
+                if ($coursHeureLimite->format('H:i:s') > $heure) {
+                    $prochainCours[] = $cours;
+                } elseif ($coursHeure->format('H:i:s') > $heure) {
+                    $prochainCours[] = $cours;
+                }
+            } elseif ($coursDate >= $now) {
+                $prochainCours[] = $cours;
+            }
+        }
+
+        usort($prochainCours, function ($cours1, $cours2) {
+            if ($cours1->getDate() === $cours2->getDate()) {
+                return $cours1->getHeure() <=> $cours2->getHeure();
+            }
+            return $cours1->getDate() <=> $cours2->getDate();
+        });
+
+        if (!$prochainCours ) {
+            return $this->json(['message' => 'Aucun cours trouvé pour l\'utilisateur donné'], Response::HTTP_NOT_FOUND);
+        }
+        
+        // Récupérer les informations nécessaires du cours
+        $nomCours = $prochainCours[0]->getNom();
+        $nomSalle = $prochainCours[0]->getSalle()->getSalle();
+        $dateCours = $prochainCours[0]->getDate()->format('Y-m-d');
+        $heureCours = $prochainCours[0]->getHeure()->format('H:i:s');
+        $presence = null;
+
+        // Récupérer la présence de l'utilisateur au cours s'il existe
+        $participe = $participeRepository->findOneBy(['cours' => $prochainCours, 'utilisateur' => $utilisateur]);
+        if ($participe) {
+            $presence = $participe->isPresence();
+        }
+
+        return $this->json([
+            'cours' => $nomCours,
+            'salle' => $nomSalle,
+            'date' => $dateCours,
+            'heure' => $heureCours,
+            'presence' => $presence,
+        ], Response::HTTP_OK);
+    }
+
+    #[Route('/api/cours/getPresence/{idCours}', name: 'getPresence', methods: ['GET'])]
+    public function getPresence($idCours, EntityManagerInterface $entityManager, ParticipeRepository $participeRepository, CoursRepository $coursRepository, UtilisateursRepository $utilisateursRepository, SerializerInterface $serializer): Response
+    {
+        // Récupérer l'utilisateur par son ID
+        $cours = $coursRepository->find($idCours);
+
+        if (!$cours) {
+            return $this->json(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
+        }
+
+        $participeCours = $cours->getParticipes();
+        $participes = array();
+
+        foreach ($participeCours as $participe) {
+            if($participe->isPresence()){
+                $participes[] = $participe;
+            }
+        }
+        
+        $jsonCours = $serializer->serialize($participes, 'json', ['groups' => 'getPresence']);
+        return new JsonResponse($jsonCours, Response::HTTP_OK, ['accept' => 'json'], true);
     }
 }
