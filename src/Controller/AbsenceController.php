@@ -37,7 +37,18 @@ class AbsenceController extends AbstractController
         $participes = $user->getParticipes();
         $absences = [];
 
+        $timezone = new \DateTimeZone('Europe/Paris');
+        $now = new \DateTime('now', $timezone);
+
         foreach ($participes as $participe) {
+            $cours = $participe->getCours();
+            $heure = clone($cours->getHeure());
+            $heure = $heure->modify('+1 hour 30 minutes');
+
+            if(($cours->getDate()->format('Y-m-d') == $now->format('Y-m-d') && $heure ->format('H:i:s') >= $now->format('H:i:s')) || $cours->getDate()->format('Y-m-d') > $now->format('Y-m-d')){
+                continue;
+            }
+
             if ($participe->isPresence() === false) {
                 $absences[] = [
                     'cours' => $participe->getCours()->getNom(),

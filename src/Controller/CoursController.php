@@ -258,4 +258,25 @@ class CoursController extends AbstractController
         $jsonCours = $serializer->serialize($utilisateurs, 'json', ['groups' => 'getParticipe']);
         return new JsonResponse($jsonCours, Response::HTTP_OK, ['accept' => 'json'], true);
     }
+
+    #[Route('/api/cours/setPresence', name:"validerAppel", methods: ['POST'])]
+    public function validateAppel(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, 
+    UrlGeneratorInterface $urlGenerator, ParticipeRepository $participeRepository, CoursRepository $coursRepository, UtilisateursRepository $utilisateursRepository): JsonResponse 
+    {        
+        $content = $request->toArray();
+        $idCours = $content['coursId'] ?? -1;
+        $cours = $coursRepository->find($idCours);
+
+        $eleves = $content['eleves'] ?? -1;
+        
+        foreach ($eleves as $user) {
+            $eleve = $utilisateursRepository->findOneBy(['nom' => $user["nom"], 'prenom' => $user["prenom"]]);
+            $participe = $participeRepository->findOneBy(['cours' => $cours, 'utilisateur' => $eleve]);
+            $participe->setPresence($user["presence"]);
+            $em->persist($participe);
+        }
+        
+        $em->flush();
+        return new JsonResponse("Appel enregistré", Response::HTTP_OK, ['accept' => 'json'], true);
+    }
 }
