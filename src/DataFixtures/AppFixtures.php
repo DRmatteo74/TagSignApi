@@ -22,6 +22,9 @@ class AppFixtures extends Fixture
 
     public function load(ObjectManager $manager): void
     {
+        $userNom = array("DI-RIENZO/Mattéo", "PEYRARD/Thibaut", "JEAN/Anthony", "DUVAL/Vincent", "HERNANDEZ/Mathis");
+        $users = array();
+
         // Génère des utilisateurs
         $user = new Utilisateurs();
         $user->setLogin("admin");
@@ -31,13 +34,22 @@ class AppFixtures extends Fixture
         $user->setPassword($this->userPasswordHasher->hashPassword($user, "admin"));
         $manager->persist($user);
 
-        $user1 = new Utilisateurs();
-        $user1->setLogin("eleve");
-        $user1->setRoles(["ROLE_ELEVE"]);
-        $user1->setNom("ELEVE");
-        $user1->setPrenom("eleve");
-        $user1->setPassword($this->userPasswordHasher->hashPassword($user1, "eleve"));
-        $manager->persist($user1);
+        foreach($userNom as $u){
+            $nom = explode("/", $u);
+            $prenom = $nom[1];
+            $nom = $nom[0];
+
+            $user1 = new Utilisateurs();
+            $user1->setLogin($prenom);
+            $user1->setRoles(["ROLE_ELEVE"]);
+            $user1->setNom($nom);
+            $user1->setPrenom($prenom);
+            $user1->setPassword($this->userPasswordHasher->hashPassword($user1, "eleve"));
+            $manager->persist($user1);
+
+            $users[] = $user1;
+
+        }
 
         $user2 = new Utilisateurs();
         $user2->setLogin("ap");
@@ -84,15 +96,24 @@ class AppFixtures extends Fixture
 
         // Génère des cours avec les participants
         $cours = new Cours();
-        $cours->setNom("Cours d'anglais");
+        $cours->setNom("Projet Annuel");
         $cours->setDistanciel(false);
         $manager->persist($cours);
 
-        $participe = new Participe();
-        $participe->setCours($cours->getId());
-        $participe->setUtilisateur($user1->getId());
-        $participe->setPresence(false);
-        $manager->persist($participe);
+        $cours = new Cours();
+        $cours->setNom("Projet Annuel");
+        $cours->setDistanciel(false);
+        $manager->persist($cours);
+
+
+        foreach($users as $u){
+            $participe = new Participe();
+            $participe->setCours($cours->getId());
+            $participe->setUtilisateur($u);
+            $participe->setPresence(false);
+            $manager->persist($participe);
+        }
+        
 
         $manager->flush();
         $manager->clear();

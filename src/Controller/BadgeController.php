@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Encoder\JsonEncode;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Constraints\Length;
 
 use function PHPSTORM_META\type;
 
@@ -51,7 +52,7 @@ class BadgeController extends AbstractController
 
         // Filtrer les cours de la date actuelle
         $currentDate = $currentDateTime->format('Y-m-d');
-        $currentTime = $currentDateTime->format('H:i');
+        $currentTime = $currentDateTime->format('H:i:s');
         $cours = $salle->getCours()->filter(function ($c) use ($currentDate) {
             return $c->getDate() && $c->getDate()->format('Y-m-d') === $currentDate;
         });
@@ -60,16 +61,30 @@ class BadgeController extends AbstractController
             return new JsonResponse(['message' => "Aucun cours prévu dans cette salle aujourd'hui"], Response::HTTP_NOT_FOUND);
         }
 
+        $matchingCours = array();
         // Rechercher le cours correspondant à l'heure actuelle
-        $matchingCours = $cours->filter(function ($c) use ($currentDateTime) {
+        foreach($cours as $c){
+            $coursDate = $c->getDate();
+            $coursHeure = $c->getHeure();
+
+            if ($coursDate->format('Y-m-d') === $currentDateTime->format('Y-m-d')) {
+                $coursHeureLimite = clone $coursHeure;
+                $coursHeureLimite->modify('+1 hour 30 minutes');
+                if ($coursHeureLimite->format('H:i:s') >= $currentTime && $coursHeure->format('H:i:s') <= $currentTime) {
+                    $matchingCours[] = $c;
+                } 
+            }
+        }
+
+        /*$matchingCours = $cours->filter(function ($c) use ($currentDateTime) {
             $coursStartTime = $c->getHeure()->modify('-15 minutes')->format('H:i:s');
             $coursEndTime = (clone $c->getHeure())->modify('+1 hour 45 minutes')->format('H:i:s');
             
             $currentTime = $currentDateTime->format('H:i:s');
         
             return $currentTime >= $coursStartTime && $currentTime <= $coursEndTime;
-        });
-
+        });*/
+        
         if (!$matchingCours) {
             return new JsonResponse(['message' => "Aucun cours prévu dans cette salle à cette heure"], Response::HTTP_NOT_FOUND);
         }
@@ -92,7 +107,7 @@ class BadgeController extends AbstractController
         }
         
         if($nonInscrit == true){
-            return new JsonResponse(['message' => 'L\'utilisateur n\'est pas inscrit au cours'], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => 'L\'utilisateur n\'est pas inscrit au cours', 'cours' => $matchingCours], Response::HTTP_BAD_REQUEST);
         }
         $jsonClasseList = $serializer->serialize($matchingCours, 'json', ['groups' => 'getCours']);
         return new JsonResponse(['message' => 'Présence enregistrée avec succès', 'cours'=>$jsonClasseList], Response::HTTP_OK);

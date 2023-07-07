@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Cours;
+use App\Entity\Participe;
 use App\Repository\ClasseRepository;
 use App\Repository\CoursRepository;
 use App\Repository\ParticipeRepository;
@@ -51,6 +52,28 @@ class CoursController extends AbstractController
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
+    /**
+ * @OA\Post(
+ *     path="/api/cours/create",
+ *     summary="Crée un nouveau cours",
+ *     tags={"Cours"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="application/json",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 @OA\Property(property="idSalle", type="integer", example=1),
+ *                 @OA\Property(property="idClasse", type="integer", example=1),
+ *                 @OA\Property(property="nom", type="string", example="Nom du cours"),
+ *                 @OA\Property(property="date", type="string", format="date", example="2023-07-01"),
+ *                 @OA\Property(property="heure", type="string", format="time", example="09:00:00"),
+ *                 @OA\Property(property="distanciel", type="boolean", example=true)
+ *             )
+ *         )
+ *     )
+ * )
+ */
     #[Route('/api/cours/create', name:"createCours", methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour créer une école')]
     public function createCours(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, 
@@ -63,8 +86,8 @@ class CoursController extends AbstractController
         $cours->setSalle($salleRepository->find($idSalle));
 
         $idClasse = $content['idClasse'] ?? -1;
-        $cours->setClasse($classeRepository->find($idClasse));
-
+        $classe = $classeRepository->find($idClasse);
+        $cours->setClasse($classe);
 
         //Vérifie les valeurs
         $errors = $validator->validate($cours);
@@ -73,6 +96,15 @@ class CoursController extends AbstractController
         }
 
         $em->persist($cours);
+
+        foreach ($classe->getUtilisateurs() as $user) {
+            $participe = new Participe();
+            $participe->setCours($cours);
+            $participe->setUtilisateur($user);
+            $participe->isPresence(false);
+            $em->persist($participe);
+        }
+
         $em->flush();
 
         $jsonCours = $serializer->serialize($cours, 'json', ['groups' => 'getCours']);
