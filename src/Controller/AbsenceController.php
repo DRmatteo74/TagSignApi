@@ -51,6 +51,7 @@ class AbsenceController extends AbstractController
 
             if ($participe->isPresence() === false) {
                 $absences[] = [
+                    'idCours' => $participe->getCours()->getId(),
                     'cours' => $participe->getCours()->getNom(),
                     'date' => $participe->getCours()->getDate(),
                     'heure' => $participe->getCours()->getHeure(),
@@ -75,6 +76,7 @@ class AbsenceController extends AbstractController
                 
                 $utilisateursAbsences[] = [
                     'idUtilisateur' => $participe->getUtilisateur()->getId(),
+                    'idCours' => $participe->getCours()->getId(),
                     'nom' => $participe->getUtilisateur()->getNom(),
                     'prenom' => $participe->getUtilisateur()->getPrenom(),
                     'cours' => $participe->getCours()->getNom(),
@@ -114,6 +116,7 @@ class AbsenceController extends AbstractController
                 foreach ($participes as $participe) {
                     if ($participe->isPresence() === false) {
                         $absences[] = [
+                            'idCours' => $participe->getCours()->getId(),
                             'cours' => $participe->getCours()->getNom(),
                             'date' => $participe->getCours()->getDate(),
                             'heure' => $participe->getCours()->getHeure(),
@@ -163,6 +166,7 @@ class AbsenceController extends AbstractController
             foreach ($participes as $participe) {
                 if ($participe->isPresence() === false) {
                     $absences[] = [
+                        'idCours' => $participe->getCours()->getId(),
                         'cours' => $participe->getCours()->getNom(),
                         'date' => $participe->getCours()->getDate(),
                         'heure' => $participe->getCours()->getHeure(),
@@ -191,23 +195,27 @@ class AbsenceController extends AbstractController
     #[Route('/api/absence/uploadJustificatif', name: 'api_absence_upload_justificatif', methods: ['POST'])]
     public function uploadJustificatif(Request $request, UtilisateursRepository $userRepository, CoursRepository $coursRepository, ParticipeRepository $participeRepository, ManagerRegistry $managerRegistry): JsonResponse
     {
-        $coursID = $request->query->getInt('cours', -1);
-        $userID = $request->query->getInt('user', -1);
-
+        $coursID = $request->get('cours', -1);
+        $userID = $request->get('user', -1);
+        
         // Fetch the user and course from the database
         $user = $userRepository->find($userID);
         $cours = $coursRepository->find($coursID);
+
+        if(!$user || !$cours){
+            return new JsonResponse(['error' => 'Cours ou élève non trouvée.', 'user' => $userID, 'coursId'=> $coursID], 404);
+        }
         
         // Create a new Participe entity
         $participe = $participeRepository->findOneBy(['utilisateur' => $user, 'cours' => $cours]);
 
         // Handle the file upload
         $uploadedFile = $request->files->get('file');
+
         $destination = $this->getParameter('justificatif_directory');
 
         $newFilename = sprintf('%s.%s', uniqid(), $uploadedFile->getClientOriginalExtension());
         $uploadedFile->move($destination, $newFilename);
-
         $participe->setJustificatif($newFilename);
 
         // Save the Participe entity

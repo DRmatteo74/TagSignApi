@@ -3,8 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\Utilisateurs;
+use App\Repository\ClasseRepository;
+use App\Repository\EcoleRepository;
 use App\Repository\UtilisateursRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use League\Csv\Reader;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -90,5 +93,64 @@ class UtilisateurController extends AbstractController
         $em->persist($updatedUser);
         $em->flush();
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
+    }
+
+    #[Route('/api/users/import', name:"importUsers", methods: ['POST'])]
+    public function importUsers(Request $request, EntityManagerInterface $em, UtilisateursRepository $utilisateursRepository, ClasseRepository $classeRepository): JsonResponse 
+    {        
+        $csvFile = $request->files->get('csv_file'); // Récupère le fichier CSV depuis la requête
+
+        if (!$csvFile) {
+            return $this->json(['message' => "Aucun fichier CSV fourni"],  Response::HTTP_BAD_REQUEST);
+        }
+
+        $reader = Reader::createFromPath($csvFile->getPathname());
+        $reader->setHeaderOffset(0); // La première ligne contient les en-têtes
+
+        $records = $reader->getRecords(); // Récupère les enregistrements du fichier CSV
+ 
+        foreach ($records as $record) {
+            $user = new Utilisateurs();
+            $user->setLogin($record['login']);
+            $user->setNom($record['nom']);
+            $user->setPrenom($record['prenom']);
+            $user->setPassword($record['motdepasse']);
+            $user->setBadge($record['badge']);
+            
+            $em->persist($user);
+        }
+        $em->flush();
+
+        // Répondez avec une réponse appropriée
+        return new JsonResponse("Importation des utilisateurs terminée.", Response::HTTP_OK, ['accept' => 'json'], true);
+    }
+
+    #[Route('/api/users/classe/{id}', name: 'userClasse', methods:['GET'])]
+    public function getUserFromClasse($id, UtilisateursRepository $userRepository, SerializerInterface $serializer, ClasseRepository $classeRepository): JsonResponse
+    {
+        $classe = $classeRepository->find($id);
+        $user = $userRepository->createQueryBuilder('u')
+            ->leftJoin('u.classes', 'c')
+            ->where('c.id = :classeId')
+            ->setParameter('classeId', $classe->getId())
+            ->getQuery()
+            ->getResult();
+        $jsonUser = $serializer->serialize($user, 'json', ['groups' => 'getUser']);
+        return new JsonResponse($jsonUser, Response::HTTP_OK, ['accept' => 'json'], true);
+    }
+
+    #[Route('/api/users/ecole/{id}', name: 'userEcole', methods: ['GET'])]
+    public function getUserFromEcole($id, UtilisateursRepository $userRepository, SerializerInterface $serializer, EcoleRepository $ecoleRepository): JsonResponse
+    {
+        $ecole = $ecoleRepository->find($id);
+        $utilisateurs = $userRepository->createQueryBuilder('u')
+            ->leftJoin('u.classes', 'c')
+            ->where('c.ecole = :ecoleId')
+            ->setParameter('ecoleId', $ecole->getId())
+            ->getQuery()
+            ->getResult();
+
+        $jsonUtilisateurs = $serializer->serialize($utilisateurs, 'json', ['groups' => 'getUser']);
+        return new JsonResponse($jsonUtilisateurs, Response::HTTP_OK, ['accept' => 'json'], true);
     }
 }

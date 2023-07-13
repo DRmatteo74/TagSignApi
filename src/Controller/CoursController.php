@@ -6,6 +6,7 @@ use App\Entity\Cours;
 use App\Entity\Participe;
 use App\Repository\ClasseRepository;
 use App\Repository\CoursRepository;
+use App\Repository\EcoleRepository;
 use App\Repository\ParticipeRepository;
 use App\Repository\SalleRepository;
 use App\Repository\UtilisateursRepository;
@@ -20,6 +21,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use League\Csv\Reader;
 use OpenApi\Annotations as OA;
 
 /**
@@ -65,6 +67,7 @@ class CoursController extends AbstractController
  *                 type="object",
  *                 @OA\Property(property="idSalle", type="integer", example=1),
  *                 @OA\Property(property="idClasse", type="integer", example=1),
+ *                 @OA\Property(property="idIntervenant", type="integer", example=1),
  *                 @OA\Property(property="nom", type="string", example="Nom du cours"),
  *                 @OA\Property(property="date", type="string", format="date", example="2023-07-01"),
  *                 @OA\Property(property="heure", type="string", format="time", example="09:00:00"),
@@ -77,7 +80,7 @@ class CoursController extends AbstractController
     #[Route('/api/cours/create', name:"createCours", methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour créer une école')]
     public function createCours(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, 
-    UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator, SalleRepository $salleRepository, ClasseRepository $classeRepository): JsonResponse 
+    UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator, SalleRepository $salleRepository, ClasseRepository $classeRepository, UtilisateursRepository $utilisateursRepository): JsonResponse 
     {
         $cours = $serializer->deserialize($request->getContent(), Cours::class, 'json');
         
@@ -89,6 +92,9 @@ class CoursController extends AbstractController
         $classe = $classeRepository->find($idClasse);
         $cours->setClasse($classe);
 
+        $idIntervenant = $content['idIntervenant'] ?? -1;
+        $intervenant = $utilisateursRepository->find($idIntervenant);
+
         //Vérifie les valeurs
         $errors = $validator->validate($cours);
         if($errors->count()>0){
@@ -97,11 +103,17 @@ class CoursController extends AbstractController
 
         $em->persist($cours);
 
+        $participeIntervenant = new Participe();
+        $participeIntervenant->setCours($cours);
+        $participeIntervenant->setUtilisateur($intervenant);
+        $participeIntervenant->setPresence(false);
+        $em->persist($participeIntervenant);
+
         foreach ($classe->getUtilisateurs() as $user) {
             $participe = new Participe();
             $participe->setCours($cours);
             $participe->setUtilisateur($user);
-            $participe->isPresence(false);
+            $participe->setPresence(false);
             $em->persist($participe);
         }
 
@@ -278,5 +290,73 @@ class CoursController extends AbstractController
         
         $em->flush();
         return new JsonResponse("Appel enregistré", Response::HTTP_OK, ['accept' => 'json'], true);
+    }
+
+    #[Route('/api/cours/import', name:"importCours", methods: ['POST'])]
+    public function importCours(Request $request, EntityManagerInterface $em, ClasseRepository $classeRepository, SalleRepository $salleRepository, UtilisateursRepository $utilisateursRepository, EcoleRepository $ecoleRepository): JsonResponse 
+    {        
+        $csvFile = $request->files->get('csv_file'); // Récupère le fichier CSV depuis la requête
+
+        if (!$csvFile) {
+            return $this->json(['message' => "Aucun fichier CSV fourni"],  Response::HTTP_BAD_REQUEST);
+        }
+
+        $reader = Reader::createFromPath($csvFile->getPathname());
+        $reader->setHeaderOffset(0); // La première ligne contient les en-têtes
+
+        $records = $reader->getRecords(); // Récupère les enregistrements du fichier CSV
+ 
+        foreach ($records as $record) {
+            $cours = new Cours();
+            $cours->setNom($record['nom']);
+            $cours->setDate(\DateTime::createFromFormat('d/m/Y', $record['date']));
+            $cours->setHeure(\DateTime::createFromFormat('H:i:s', $record['heure']));
+            $cours->setDistanciel($record['distanciel']);
+
+            $salle = $salleRepository->findOneBy(['salle' => $record['salle']]);
+            if($salle == null){
+                return $this->json(['message' => "Salle inconnue : " . $record['salle']],  Response::HTTP_BAD_REQUEST);
+            }
+            $cours->setSalle($salle);
+
+            $ecole = $ecoleRepository->findOneBy(['nom' => $record['ecole']]);
+            if($ecole == null){
+                return $this->json(['message' => "Ecole inconnue : " . $record['ecole']],  Response::HTTP_BAD_REQUEST);
+            }
+
+            $classe = $classeRepository->findOneBy(['nom' => $record['classe'], 'ecole' => $ecole]);
+            if($classe == null){
+                return $this->json(['message' => "Classe inconnue : " . $record['classe']],  Response::HTTP_BAD_REQUEST);
+            }
+
+            $intervenant = explode(" ", $record['intervenant']);
+            $p = new Participe();
+            $p->setCours($cours);
+
+            $_intervenant = $utilisateursRepository->findOneBy(['nom' => $intervenant[0], 'prenom' => $intervenant[1]]);
+
+            if($_intervenant == null){
+                return $this->json(['message' => "Intervenant inconnu : " . $intervenant[0] . " " . $intervenant[1]],  Response::HTTP_BAD_REQUEST);
+            }
+
+            $p->setUtilisateur($_intervenant);
+            $p->isPresence(false);
+            $em->persist($p);
+
+            $cours->setClasse($classe);
+            $em->persist($cours);
+
+            foreach ($classe->getUtilisateurs() as $user) {
+                $participe = new Participe();
+                $participe->setCours($cours);
+                $participe->setUtilisateur($user);
+                $participe->isPresence(false);
+                $em->persist($participe);
+            }
+        }
+        $em->flush();
+
+        // Répondez avec une réponse appropriée
+        return new JsonResponse("Importation des utilisateurs terminée.", Response::HTTP_OK, ['accept' => 'json'], true);
     }
 }
