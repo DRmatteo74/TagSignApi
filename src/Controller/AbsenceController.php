@@ -25,6 +25,41 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 */
 class AbsenceController extends AbstractController
 {
+    /**
+    * @OA\Get(
+    *     path="/api/absences/{id}",
+    *     summary="Obtient les absences d'un élève",
+    *     tags={"Absences"},
+    *     @OA\Parameter(
+    *         name="id",
+    *         in="path",
+    *         description="ID de l'élève",
+    *         required=true,
+    *         @OA\Schema(
+    *             type="integer",
+    *             format="int64"
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="200",
+    *         description="Absences de l'élève",
+    *         @OA\JsonContent(
+    *             @OA\Property(property="absences", type="array", @OA\Items(
+    *                 @OA\Property(property="idCours", type="integer"),
+    *                 @OA\Property(property="cours", type="string"),
+    *                 @OA\Property(property="date", type="string", format="date"),
+    *                 @OA\Property(property="heure", type="string", format="time"),
+    *                 @OA\Property(property="justifie", type="boolean"),
+    *                 @OA\Property(property="justificatif", type="string", nullable=true)
+    *             ))
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="404",
+    *         description="Utilisateur non trouvé"
+    *     )
+    * )
+    */
     #[Route('/api/absences/{id}', name: 'absenceEleve', methods:['GET'])]
     public function getAbsenceOfEleve(int $id, UtilisateursRepository $utilisateursRepository): JsonResponse
     {
@@ -64,6 +99,30 @@ class AbsenceController extends AbstractController
         return new JsonResponse(['absences' => $absences]);
     }
 
+    /**
+    * @OA\Get(
+    *     path="/api/absences",
+    *     summary="Obtient toutes les absences",
+    *     tags={"Absences"},
+    *     @OA\Response(
+    *         response="200",
+    *         description="Toutes les absences",
+    *         @OA\JsonContent(
+    *             @OA\Property(property="utilisateurs_absences", type="array", @OA\Items(
+    *                 @OA\Property(property="idUtilisateur", type="integer"),
+    *                 @OA\Property(property="idCours", type="integer"),
+    *                 @OA\Property(property="nom", type="string"),
+    *                 @OA\Property(property="prenom", type="string"),
+    *                 @OA\Property(property="cours", type="string"),
+    *                 @OA\Property(property="date", type="string", format="date"),
+    *                 @OA\Property(property="heure", type="string", format="time"),
+    *                 @OA\Property(property="justifie", type="boolean"),
+    *                 @OA\Property(property="justificatif", type="string", nullable=true)
+    *             ))
+    *         )
+    *     )
+    * )
+    */
     #[Route('/api/absences', name: 'absences', methods:['GET'])]
     public function getAllAbsence(ParticipeRepository $participeRepository): JsonResponse
     {
@@ -92,6 +151,50 @@ class AbsenceController extends AbstractController
 
     }
 
+    /**
+    * @OA\Get(
+    *     path="/api/absences/ecole/{id}",
+    *     summary="Obtient toutes les absences d'une école",
+    *     tags={"Absences"},
+    *     @OA\Parameter(
+    *         name="id",
+    *         in="path",
+    *         description="ID de l'école",
+    *         required=true,
+    *         @OA\Schema(
+    *             type="integer",
+    *             format="int64"
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="200",
+    *         description="Toutes les absences de l'école",
+    *         @OA\JsonContent(
+    *             @OA\Property(property="utilisateurs_absences", type="array", @OA\Items(
+    *                 @OA\Property(property="nom", type="string"),
+    *                 @OA\Property(property="utilisateurs", type="array", @OA\Items(
+    *                     @OA\Property(property="id", type="integer"),
+    *                     @OA\Property(property="nom", type="string"),
+    *                     @OA\Property(property="prenom", type="string"),
+    *                     @OA\Property(property="badge", type="integer"),
+    *                     @OA\Property(property="absences", type="array", @OA\Items(
+    *                         @OA\Property(property="idCours", type="integer"),
+    *                         @OA\Property(property="cours", type="string"),
+    *                         @OA\Property(property="date", type="string", format="date"),
+    *                         @OA\Property(property="heure", type="string", format="time"),
+    *                         @OA\Property(property="justifie", type="boolean"),
+    *                         @OA\Property(property="justificatif", type="string", nullable=true)
+    *                     ))
+    *                 ))
+    *             ))
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="404",
+    *         description="École non trouvée"
+    *     )
+    * )
+    */
     #[Route('/api/absences/ecole/{id}', name: 'absenceEcole', methods:['GET'])]
     public function getAllAbsenceOfEcole(int $id, EcoleRepository $ecoleRepository): JsonResponse
     {
@@ -147,6 +250,47 @@ class AbsenceController extends AbstractController
         return new JsonResponse(['utilisateurs_absences' => $utilisateursAbsences]);
     }
 
+    /**
+    * @OA\Get(
+    *     path="/api/absences/classe/{id}",
+    *     summary="Obtient toutes les absences d'une classe",
+    *     tags={"Absences"},
+    *     @OA\Parameter(
+    *         name="id",
+    *         in="path",
+    *         description="ID de la classe",
+    *         required=true,
+    *         @OA\Schema(
+    *             type="integer",
+    *             format="int64"
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="200",
+    *         description="Toutes les absences de la classe",
+    *         @OA\JsonContent(
+    *             @OA\Property(property="utilisateurs_absences", type="array", @OA\Items(
+    *                 @OA\Property(property="id", type="integer"),
+    *                 @OA\Property(property="nom", type="string"),
+    *                 @OA\Property(property="prenom", type="string"),
+    *                 @OA\Property(property="badge", type="integer"),
+    *                 @OA\Property(property="absences", type="array", @OA\Items(
+    *                     @OA\Property(property="idCours", type="integer"),
+    *                     @OA\Property(property="cours", type="string"),
+    *                     @OA\Property(property="date", type="string", format="date"),
+    *                     @OA\Property(property="heure", type="string", format="time"),
+    *                     @OA\Property(property="justifie", type="boolean"),
+    *                     @OA\Property(property="justificatif", type="string", nullable=true)
+    *                 ))
+    *             ))
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="404",
+    *         description="Classe non trouvée"
+    *     )
+    * )
+    */
     #[Route('/api/absences/classe/{id}', name: 'absenceClasse', methods:['GET'])]
     public function getAllAbsenceOfClasse(int $id, ClasseRepository $classeRepository): JsonResponse
     {
@@ -192,6 +336,48 @@ class AbsenceController extends AbstractController
         return new JsonResponse(['utilisateurs_absences' => $utilisateursAbsences]);
     }
 
+    /**
+    * @OA\Post(
+    *     path="/api/absence/uploadJustificatif",
+    *     summary="Télécharge un justificatif pour une absence",
+    *     tags={"Absences"},
+    *     @OA\RequestBody(
+    *         required=true,
+    *         description="Données de la requête",
+    *         @OA\MediaType(
+    *             mediaType="multipart/form-data",
+    *             @OA\Schema(
+    *                 @OA\Property(
+    *                     property="cours",
+    *                     description="ID du cours",
+    *                     type="integer",
+    *                     format="int64"
+    *                 ),
+    *                 @OA\Property(
+    *                     property="user",
+    *                     description="ID de l'utilisateur",
+    *                     type="integer",
+    *                     format="int64"
+    *                 ),
+    *                 @OA\Property(
+    *                     property="file",
+    *                     description="Fichier justificatif",
+    *                     type="string",
+    *                     format="binary"
+    *                 )
+    *             )
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="200",
+    *         description="Justificatif téléchargé avec succès"
+    *     ),
+    *     @OA\Response(
+    *         response="404",
+    *         description="Cours ou élève non trouvée"
+    *     )
+    * )
+    */
     #[Route('/api/absence/uploadJustificatif', name: 'api_absence_upload_justificatif', methods: ['POST'])]
     public function uploadJustificatif(Request $request, UtilisateursRepository $userRepository, CoursRepository $coursRepository, ParticipeRepository $participeRepository, ManagerRegistry $managerRegistry): JsonResponse
     {

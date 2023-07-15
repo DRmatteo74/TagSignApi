@@ -15,9 +15,46 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Constraints\Length;
 
 use function PHPSTORM_META\type;
+use OpenApi\Annotations as OA;
 
+/**
+* @OA\Tag(name="Badge")
+*/
 class BadgeController extends AbstractController
 {
+    /**
+    * @OA\Get(
+    *     path="/api/badge/{id}",
+    *     summary="Obtient les détails de l'utilisateur par badge",
+    *     tags={"Badge"},
+    *     @OA\Parameter(
+    *         name="id",
+    *         in="path",
+    *         description="ID du badge",
+    *         required=true,
+    *         @OA\Schema(
+    *             type="integer",
+    *             format="int64"
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="200",
+    *         description="Détails de l'utilisateur par badge",
+    *         @OA\JsonContent(
+    *             @OA\Property(property="id", type="integer"),
+    *             @OA\Property(property="login", type="string"),
+    *             @OA\Property(property="nom", type="string"),
+    *             @OA\Property(property="prenom", type="string"),
+    *             @OA\Property(property="roles", type="array", @OA\Items(type="string")),
+    *             @OA\Property(property="badge", type="string")
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="404",
+    *         description="Utilisateur introuvable"
+    *     )
+    * )
+    */
     #[Route('/api/badge/{id}', name: 'detailBadgeUser', methods: ['GET'])]
     public function getDetailBadge($id, UtilisateursRepository $utilisateursRepository, SerializerInterface $serializer): JsonResponse 
     {
@@ -30,7 +67,48 @@ class BadgeController extends AbstractController
         return new JsonResponse($jsonClasse, Response::HTTP_OK, ['accept' => 'json'], true);
     }
 
-
+    /**
+    * @OA\Get(
+    *     path="/api/badge/cours/{idBadge}/{idSalle}",
+    *     summary="Scan de badge",
+    *     tags={"Badge"},
+    *     @OA\Parameter(
+    *         name="idBadge",
+    *         in="path",
+    *         description="ID du badge",
+    *         required=true,
+    *         @OA\Schema(
+    *             type="integer",
+    *             format="int64"
+    *         )
+    *     ),
+    *     @OA\Parameter(
+    *         name="idSalle",
+    *         in="path",
+    *         description="ID de la salle",
+    *         required=true,
+    *         @OA\Schema(
+    *             type="integer",
+    *             format="int64"
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="200",
+    *         description="Présence enregistrée avec succès",
+    *         @OA\MediaType(
+    *             mediaType="application/json"
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="400",
+    *         description="L'utilisateur n'est pas inscrit au cours"
+    *     ),
+    *     @OA\Response(
+    *         response="404",
+    *         description="Utilisateur ou salle introuvable"
+    *     )
+    * )
+    */
     #[Route('/api/badge/cours/{idBadge}/{idSalle}', name: 'badgeScan', methods: ['GET'])]
     public function scanBadge($idBadge, $idSalle, UtilisateursRepository $userRepository, SalleRepository $salleRepository, ParticipeRepository $participeRepository, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
     {

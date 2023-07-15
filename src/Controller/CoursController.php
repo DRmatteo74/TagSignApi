@@ -29,6 +29,46 @@ use OpenApi\Annotations as OA;
 */
 class CoursController extends AbstractController
 {
+    /**
+    * @OA\Get(
+    *     path="/api/cours",
+    *     summary="Récupère tous les cours",
+    *     tags={"Cours"},
+    *     @OA\Response(
+    *         response="200",
+    *         description="Liste des cours",
+    *         @OA\JsonContent(
+    *             type="array",
+    *             @OA\Items(
+    *                 @OA\Property(property="id", type="integer"),
+    *                 @OA\Property(property="nom", type="string"),
+    *                 @OA\Property(property="date", type="string", format="date-time"),
+    *                 @OA\Property(property="heure", type="string", format="date-time"),
+    *                 @OA\Property(property="distanciel", type="boolean"),
+    *                 @OA\Property(
+    *                     property="salle",
+    *                     type="object",
+    *                     @OA\Property(property="id", type="integer"),
+    *                     @OA\Property(property="salle", type="string"),
+    *                     @OA\Property(property="lecteur", type="string")
+    *                 ),
+    *                 @OA\Property(
+    *                     property="classe",
+    *                     type="object",
+    *                     @OA\Property(property="id", type="integer"),
+    *                     @OA\Property(property="nom", type="string"),
+    *                     @OA\Property(
+    *                         property="ecole",
+    *                         type="object",
+    *                         @OA\Property(property="id", type="integer"),
+    *                         @OA\Property(property="nom", type="string")
+    *                     )
+    *                 )
+    *             )
+    *         )
+    *     )
+    * )
+    */
     #[Route('/api/cours', name: 'cours', methods:['GET'])]
     public function getAllCours(CoursRepository $coursRepository, SerializerInterface $serializer): JsonResponse
     {
@@ -37,6 +77,53 @@ class CoursController extends AbstractController
         return new JsonResponse($jsonCoursList, Response::HTTP_OK, [], true);
     }
     
+    /**
+    * @OA\Get(
+    *     path="/api/cours/{id}",
+    *     summary="Récupère les détails d'un cours",
+    *     tags={"Cours"},
+    *     @OA\Parameter(
+    *         name="id",
+    *         in="path",
+    *         description="ID du cours",
+    *         required=true,
+    *         @OA\Schema(
+    *             type="integer",
+    *             format="int64"
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="200",
+    *         description="Détail du cours",
+    *         @OA\JsonContent(
+    *              @OA\Property(property="id", type="integer"),
+    *              @OA\Property(property="nom", type="string"),
+    *              @OA\Property(property="date", type="string", format="date-time"),
+    *              @OA\Property(property="heure", type="string", format="date-time"),
+    *              @OA\Property(property="distanciel", type="boolean"),
+    *              @OA\Property(
+    *                  property="salle",
+    *                  type="object",
+    *                  @OA\Property(property="id", type="integer"),
+    *                  @OA\Property(property="salle", type="string"),
+    *                  @OA\Property(property="lecteur", type="string")
+    *              ),
+    *              @OA\Property(
+    *                  property="classe",
+    *                  type="object",
+    *                  @OA\Property(property="id", type="integer"),
+    *                  @OA\Property(property="nom", type="string"),
+    *                  @OA\Property(
+    *                      property="ecole",
+    *                      type="object",
+    *                      @OA\Property(property="id", type="integer"),
+    *                      @OA\Property(property="nom", type="string")
+    *                  )
+    *              )
+    *         )
+    *     )
+    * )
+    */
     #[Route('/api/cours/{id}', name: 'detailCours', methods: ['GET'])]
     public function getDetailCours(Cours $cours, SerializerInterface $serializer): JsonResponse 
     {
@@ -44,6 +131,27 @@ class CoursController extends AbstractController
         return new JsonResponse($jsonCours, Response::HTTP_OK, ['accept' => 'json'], true);
     }
 
+    /**
+    * @OA\Delete(
+    *     path="/api/cours/delete/{id}",
+    *     summary="Supprime un cours",
+    *     tags={"Cours"},
+    *     @OA\Parameter(
+    *         name="id",
+    *         in="path",
+    *         description="ID du cours",
+    *         required=true,
+    *         @OA\Schema(
+    *             type="integer",
+    *             format="int64"
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="204",
+    *         description="Cours supprimé avec succès"
+    *     )
+    * )
+    */
     #[Route('/api/cours/delete/{id}', name: 'deleteCours', methods: ['DELETE'])]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour créer une école')]
     public function deleteCours(Cours $cours, EntityManagerInterface $em): JsonResponse 
@@ -55,28 +163,58 @@ class CoursController extends AbstractController
     }
 
     /**
- * @OA\Post(
- *     path="/api/cours/create",
- *     summary="Crée un nouveau cours",
- *     tags={"Cours"},
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\MediaType(
- *             mediaType="application/json",
- *             @OA\Schema(
- *                 type="object",
- *                 @OA\Property(property="idSalle", type="integer", example=1),
- *                 @OA\Property(property="idClasse", type="integer", example=1),
- *                 @OA\Property(property="idIntervenant", type="integer", example=1),
- *                 @OA\Property(property="nom", type="string", example="Nom du cours"),
- *                 @OA\Property(property="date", type="string", format="date", example="2023-07-01"),
- *                 @OA\Property(property="heure", type="string", format="time", example="09:00:00"),
- *                 @OA\Property(property="distanciel", type="boolean", example=true)
- *             )
- *         )
- *     )
- * )
- */
+    * @OA\Post(
+    *     path="/api/cours/create",
+    *     summary="Crée un nouveau cours",
+    *     tags={"Cours"},
+    *     @OA\RequestBody(
+    *         required=true,
+    *         @OA\MediaType(
+    *             mediaType="application/json",
+    *             @OA\Schema(
+    *                 type="object",
+    *                 @OA\Property(property="idSalle", type="integer", example=1),
+    *                 @OA\Property(property="idClasse", type="integer", example=1),
+    *                 @OA\Property(property="idIntervenant", type="integer", example=1),
+    *                 @OA\Property(property="nom", type="string", example="Nom du cours"),
+    *                 @OA\Property(property="date", type="string", format="date", example="2023-07-01"),
+    *                 @OA\Property(property="heure", type="string", format="time", example="09:00:00"),
+    *                 @OA\Property(property="distanciel", type="boolean", example=true)
+    *             )
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="201",
+    *         description="Cours créé",
+    *         @OA\JsonContent(
+    *              @OA\Property(property="id", type="integer"),
+    *              @OA\Property(property="nom", type="string"),
+    *              @OA\Property(property="date", type="string", format="date-time"),
+    *              @OA\Property(property="heure", type="string", format="date-time"),
+    *              @OA\Property(property="distanciel", type="boolean"),
+    *              @OA\Property(
+    *                  property="salle",
+    *                  type="object",
+    *                  @OA\Property(property="id", type="integer"),
+    *                  @OA\Property(property="salle", type="string"),
+    *                  @OA\Property(property="lecteur", type="string")
+    *              ),
+    *              @OA\Property(
+    *                  property="classe",
+    *                  type="object",
+    *                  @OA\Property(property="id", type="integer"),
+    *                  @OA\Property(property="nom", type="string"),
+    *                  @OA\Property(
+    *                      property="ecole",
+    *                      type="object",
+    *                      @OA\Property(property="id", type="integer"),
+    *                      @OA\Property(property="nom", type="string")
+    *                  )
+    *              )
+    *         )
+    *     )
+    * )
+    */
     #[Route('/api/cours/create', name:"createCours", methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour créer une école')]
     public function createCours(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, 
@@ -126,6 +264,38 @@ class CoursController extends AbstractController
         return new JsonResponse($jsonCours, Response::HTTP_CREATED, ["Location" => $location], true);
     }
 
+    /**
+    * @OA\Put(
+    *     path="/api/cours/update/{id}",
+    *     summary="Met à jour un cours",
+    *     tags={"Cours"},
+    *     @OA\Parameter(
+    *         name="id",
+    *         in="path",
+    *         description="ID du cours",
+    *         required=true,
+    *         @OA\Schema(
+    *             type="integer",
+    *             format="int64"
+    *         )
+    *     ),
+    *     @OA\RequestBody(
+    *         required=true,
+    *         @OA\MediaType(
+    *             mediaType="application/json",
+    *             @OA\Schema(
+    *                 type="object",
+    *                 @OA\Property(property="idSalle", type="integer", example=1),
+    *                 @OA\Property(property="idClasse", type="integer", example=1),
+    *                 @OA\Property(property="nom", type="string", example="Nom du cours"),
+    *                 @OA\Property(property="date", type="string", format="date", example="2023-07-01"),
+    *                 @OA\Property(property="heure", type="string", format="time", example="09:00:00"),
+    *                 @OA\Property(property="distanciel", type="boolean", example=true)
+    *             )
+    *         )
+    *     )
+    * )
+    */
     #[Route('/api/cours/update/{id}', name:"updateCours", methods:['PUT'])]
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour modifier une école')]
     public function updateCours(Request $request, SerializerInterface $serializer, Cours $currentCours, SalleRepository $salleRepository, ClasseRepository $classeRepository, EntityManagerInterface $em): JsonResponse 
@@ -147,6 +317,39 @@ class CoursController extends AbstractController
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
     }
 
+    /**
+    * @OA\Get(
+    *     path="/api/cours/next/{idUser}",
+    *     summary="Récupère le prochain cours d'un utilisateur",
+    *     tags={"Cours"},
+    *     @OA\Parameter(
+    *         name="idUser",
+    *         in="path",
+    *         description="ID de l'utilisateur",
+    *         required=true,
+    *         @OA\Schema(
+    *             type="integer",
+    *             format="int64"
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="200",
+    *         description="Prochain cours",
+    *         @OA\JsonContent(
+    *             @OA\Property(property="id", type="integer"),
+    *             @OA\Property(property="cours", type="string"),
+    *             @OA\Property(property="salle", type="string"),
+    *             @OA\Property(property="date", type="string", format="date"),
+    *             @OA\Property(property="heure", type="string", format="time"),
+    *             @OA\Property(property="presence", type="boolean")
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="404",
+    *         description="Utilisateur non trouvé"
+    *     )
+    * )
+    */
     #[Route('/api/cours/next/{idUser}', name: 'api_next_cours', methods: ['GET'])]
     public function getNextCours($idUser, EntityManagerInterface $entityManager, ParticipeRepository $participeRepository, CoursRepository $coursRepository, UtilisateursRepository $utilisateursRepository, SerializerInterface $serializer): Response
     {
@@ -221,6 +424,46 @@ class CoursController extends AbstractController
         ], Response::HTTP_OK);
     }
 
+    /**
+    * @OA\Get(
+    *     path="/api/cours/getPresence/{idCours}",
+    *     summary="Récupère la liste des participants présents pour un cours",
+    *     tags={"Cours"},
+    *     @OA\Parameter(
+    *         name="idCours",
+    *         in="path",
+    *         description="ID du cours",
+    *         required=true,
+    *         @OA\Schema(
+    *             type="integer",
+    *             format="int64"
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="200",
+    *         description="Utilisateurs présents",
+    *         @OA\JsonContent(
+    *             type="array",
+    *             @OA\Items(
+    *                 @OA\Property(property="id", type="integer"),
+    *                 @OA\Property(
+    *                     property="utilisateur",
+    *                     type="object",
+    *                     @OA\Property(property="id", type="integer"),
+    *                     @OA\Property(property="nom", type="string"),
+    *                     @OA\Property(property="prenom", type="string")
+    *                 ),
+    *                 @OA\Property(property="presence", type="boolean"),
+    *                 @OA\Property(property="heure_badgeage", type="string", format="date-time", nullable=true)
+    *             )
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="404",
+    *         description="Cours non trouvé"
+    *     )
+    * )
+    */
     #[Route('/api/cours/getPresence/{idCours}', name: 'getPresence', methods: ['GET'])]
     public function getPresence($idCours, CoursRepository $coursRepository, UtilisateursRepository $utilisateursRepository, SerializerInterface $serializer): Response
     {
@@ -244,6 +487,39 @@ class CoursController extends AbstractController
         return new JsonResponse($jsonCours, Response::HTTP_OK, ['accept' => 'json'], true);
     }
 
+    /**
+    * @OA\Get(
+    *     path="/api/cours/getListEleve/{idCours}",
+    *     summary="Récupère la liste des élèves pour un cours",
+    *     tags={"Cours"},
+    *     @OA\Parameter(
+    *         name="idCours",
+    *         in="path",
+    *         description="ID du cours",
+    *         required=true,
+    *         @OA\Schema(
+    *             type="integer",
+    *             format="int64"
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="200",
+    *         description="Liste des élèves",
+    *         @OA\JsonContent(
+    *             type="array",
+    *             @OA\Items(
+    *                 @OA\Property(property="nom", type="string"),
+    *                 @OA\Property(property="prenom", type="string"),
+    *                 @OA\Property(property="presence", type="boolean", nullable=true)
+    *             )
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="404",
+    *         description="Cours non trouvé"
+    *     )
+    * )
+    */
     #[Route('/api/cours/getListEleve/{idCours}', name: 'getListEleve', methods: ['GET'])]
     public function getListEleve($idCours, EntityManagerInterface $entityManager, ParticipeRepository $participeRepository, CoursRepository $coursRepository, UtilisateursRepository $utilisateursRepository, SerializerInterface $serializer): Response
     {
@@ -271,6 +547,56 @@ class CoursController extends AbstractController
         return new JsonResponse($jsonCours, Response::HTTP_OK, ['accept' => 'json'], true);
     }
 
+    /**
+    * @OA\Post(
+    *     path="/api/cours/setPresence",
+    *     summary="Enregistre les présences des élèves pour un cours",
+    *     tags={"Cours"},
+    *     @OA\RequestBody(
+    *         description="Données de la requête",
+    *         required=true,
+    *         @OA\MediaType(
+    *             mediaType="application/json",
+    *             @OA\Schema(
+    *                 @OA\Property(
+    *                     property="coursId",
+    *                     type="integer",
+    *                     description="ID du cours"
+    *                 ),
+    *                 @OA\Property(
+    *                     property="eleves",
+    *                     type="array",
+    *                     @OA\Items(
+    *                         type="object",
+    *                         @OA\Property(
+    *                             property="nom",
+    *                             type="string",
+    *                             description="Nom de l'élève"
+    *                         ),
+    *                         @OA\Property(
+    *                             property="prenom",
+    *                             type="string",
+    *                             description="Prénom de l'élève"
+    *                         ),
+    *                         @OA\Property(
+    *                             property="presence",
+    *                             type="boolean",
+    *                             description="Présence de l'élève"
+    *                         )
+    *                     )
+    *                 )
+    *             )
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="200",
+    *         description="Appel enregistré",
+    *         @OA\MediaType(
+    *             mediaType="application/json"
+    *         )
+    *     )
+    * )
+    */
     #[Route('/api/cours/setPresence', name:"validerAppel", methods: ['POST'])]
     public function validateAppel(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, 
     UrlGeneratorInterface $urlGenerator, ParticipeRepository $participeRepository, CoursRepository $coursRepository, UtilisateursRepository $utilisateursRepository): JsonResponse 
@@ -292,6 +618,39 @@ class CoursController extends AbstractController
         return new JsonResponse("Appel enregistré", Response::HTTP_OK, ['accept' => 'json'], true);
     }
 
+    /**
+    * @OA\Post(
+    *     path="/api/cours/import",
+    *     summary="Importe des cours à partir d'un fichier CSV",
+    *     tags={"Cours"},
+    *     @OA\RequestBody(
+    *         description="Fichier CSV",
+    *         required=true,
+    *         @OA\MediaType(
+    *             mediaType="multipart/form-data",
+    *             @OA\Schema(
+    *                 @OA\Property(
+    *                     property="csv_file",
+    *                     type="string",
+    *                     format="binary",
+    *                     description="Fichier CSV contenant les données des cours"
+    *                 )
+    *             )
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="200",
+    *         description="Importation des cours terminée",
+    *         @OA\MediaType(
+    *             mediaType="application/json"
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="400",
+    *         description="Aucun fichier CSV fourni ou erreur lors de l'importation"
+    *     )
+    * )
+    */
     #[Route('/api/cours/import', name:"importCours", methods: ['POST'])]
     public function importCours(Request $request, EntityManagerInterface $em, ClasseRepository $classeRepository, SalleRepository $salleRepository, UtilisateursRepository $utilisateursRepository, EcoleRepository $ecoleRepository): JsonResponse 
     {        
