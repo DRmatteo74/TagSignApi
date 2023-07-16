@@ -216,7 +216,6 @@ class CoursController extends AbstractController
     * )
     */
     #[Route('/api/cours/create', name:"createCours", methods: ['POST'])]
-    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour créer une école')]
     public function createCours(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, 
     UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator, SalleRepository $salleRepository, ClasseRepository $classeRepository, UtilisateursRepository $utilisateursRepository): JsonResponse 
     {
