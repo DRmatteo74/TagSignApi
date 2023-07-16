@@ -33,9 +33,8 @@ class Cours
     #[Groups(["getCours", "getParticipe"])]
     private ?\DateTimeInterface $heure = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: Types::BOOLEAN, nullable:true)]
     #[Groups(["getCours", "getParticipe"])]
-    #[Assert\NotBlank(message: "Le booléen distanciel est obligatoire")]
     private ?bool $distanciel = null;
 
     #[ORM\ManyToOne(inversedBy: 'cours')]
