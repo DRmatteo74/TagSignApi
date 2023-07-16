@@ -15,8 +15,10 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
 use OpenApi\Annotations as OA;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Serializer\Encoder\JsonEncode;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
@@ -410,5 +412,45 @@ class AbsenceController extends AbstractController
         $entityManager->flush();
 
         return new JsonResponse(['success' => true]);
+    }
+
+
+    /**
+    * @OA\Get(
+    *     path="/api/document/{filename}",
+    *     summary="Récupère un document",
+    *     tags={"Absences"},
+    *     @OA\Parameter(
+    *         name="filename",
+    *         in="path",
+    *         description="Nom du fichier à récupérer",
+    *         required=true,
+    *         @OA\Schema(type="string")
+    *     ),
+    *     @OA\Response(
+    *         response="200",
+    *         description="Fichier trouvé",
+    *         @OA\MediaType(
+    *             mediaType="application/octet-stream"
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response="404",
+    *         description="Fichier non trouvé"
+    *     )
+    * )
+    */
+    #[Route('/api/document/{filename}', name: 'get_document', methods:["GET"])]
+    public function getDocument(string $filename): BinaryFileResponse
+    {
+        $filePath = $this->getParameter('justificatif_directory') . '/' . $filename;
+
+        // Vérifiez si le fichier existe
+        if (!file_exists($filePath)) {
+            throw $this->createNotFoundException('Le document demandé n\'existe pas.');
+        }
+
+        // Créez une réponse avec le fichier en tant que contenu
+        return new BinaryFileResponse($filePath);
     }
 }
