@@ -132,12 +132,20 @@ class AbsenceController extends AbstractController
         $participes = $participeRepository->findAll();
         $utilisateursAbsences = [];
 
+        $timezone = new \DateTimeZone('Europe/Paris');
+        $now = new \DateTime('now', $timezone);
+
         foreach ($participes as $participe) {
             if(!in_array("ROLE_ELEVE", $participe->getUtilisateur()->getRoles())){
                 continue;
             }
 
-            if ($participe->isPresence() === false) {
+            $temp = clone($participe->getCours()->getHeure());
+            $temp = $temp->modify('+1 hour 30 minutes');
+
+            if ($participe->isPresence() === false && (
+                $participe->getCours()->getDate()->format('Y-m-d') < $now->format('Y-m-d') || 
+                ($participe->getCours()->getDate()->format('Y-m-d') == $now->format('Y-m-d') && $temp->format('H:i:s') <= $now->format('H:i:s')))) {
                 
                 $utilisateursAbsences[] = [
                     'idUtilisateur' => $participe->getUtilisateur()->getId(),
@@ -212,6 +220,8 @@ class AbsenceController extends AbstractController
             return new JsonResponse(['error' => 'École non trouvée.'], 404);
         }
     
+        $timezone = new \DateTimeZone('Europe/Paris');
+        $now = new \DateTime('now', $timezone);
         $utilisateursAbsences = [];
     
         foreach ($ecole->getClasses() as $classe) {
@@ -225,7 +235,12 @@ class AbsenceController extends AbstractController
                 $absences = [];
     
                 foreach ($participes as $participe) {
-                    if ($participe->isPresence() === false) {
+                    $temp = clone($participe->getCours()->getHeure());
+                    $temp = $temp->modify('+1 hour 30 minutes');
+
+                    if ($participe->isPresence() === false && (
+                        $participe->getCours()->getDate()->format('Y-m-d') < $now->format('Y-m-d') || 
+                        ($participe->getCours()->getDate()->format('Y-m-d') == $now->format('Y-m-d') && $temp->format('H:i:s') <= $now->format('H:i:s')))) {
                         $absences[] = [
                             'idCours' => $participe->getCours()->getId(),
                             'cours' => $participe->getCours()->getNom(),
@@ -309,6 +324,8 @@ class AbsenceController extends AbstractController
         }
 
         $utilisateursAbsences = [];
+        $timezone = new \DateTimeZone('Europe/Paris');
+        $now = new \DateTime('now', $timezone);
 
         foreach ($classe->getUtilisateurs() as $utilisateur) {
             $participes = $utilisateur->getParticipes();
@@ -316,7 +333,12 @@ class AbsenceController extends AbstractController
             $absences = [];
 
             foreach ($participes as $participe) {
-                if ($participe->isPresence() === false) {
+                $temp = clone($participe->getCours()->getHeure());
+                $temp = $temp->modify('+1 hour 30 minutes');
+
+                if ($participe->isPresence() === false && (
+                    $participe->getCours()->getDate()->format('Y-m-d') < $now->format('Y-m-d') || 
+                    ($participe->getCours()->getDate()->format('Y-m-d') == $now->format('Y-m-d') && $temp->format('H:i:s') <= $now->format('H:i:s')))) {
                     $absences[] = [
                         'idCours' => $participe->getCours()->getId(),
                         'cours' => $participe->getCours()->getNom(),
