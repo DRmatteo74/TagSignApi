@@ -133,11 +133,17 @@ class AbsenceController extends AbstractController
         $utilisateursAbsences = [];
 
         foreach ($participes as $participe) {
+            if(!in_array("ROLE_ELEVE", $participe->getUtilisateur()->getRoles())){
+                continue;
+            }
+
             if ($participe->isPresence() === false) {
                 
                 $utilisateursAbsences[] = [
                     'idUtilisateur' => $participe->getUtilisateur()->getId(),
                     'idCours' => $participe->getCours()->getId(),
+                    'ecole' => $participe->getCours()->getClasse()->getEcole()->getNom(),
+                    'classe' => $participe->getCours()->getClasse()->getNom(),
                     'nom' => $participe->getUtilisateur()->getNom(),
                     'prenom' => $participe->getUtilisateur()->getPrenom(),
                     'cours' => $participe->getCours()->getNom(),
