@@ -156,7 +156,7 @@ class ClasseController extends AbstractController
     *             mediaType="application/json",
     *             @OA\Schema(
     *                 @OA\Property(property="nom", type="string", example="Nom de la classe"),
-    *                 @OA\Property(property="ecole", type="integer", example=1),
+    *                 @OA\Property(property="idEcole", type="integer", example=1),
     *                 @OA\Property(property="idUtilisateurs", type="array", @OA\Items(type="integer"), example={1, 2})
     *             )
     *         )

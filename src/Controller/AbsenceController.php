@@ -397,7 +397,7 @@ class AbsenceController extends AbstractController
         $cours = $coursRepository->find($coursID);
 
         if(!$user || !$cours){
-            return new JsonResponse(['error' => 'Cours ou élève non trouvée.', 'user' => $userID, 'coursId'=> $coursID], 404);
+            return new JsonResponse(['error' => 'Cours ou élève non trouvée.'], 404);
         }
         
         // Create a new Participe entity
@@ -458,5 +458,42 @@ class AbsenceController extends AbstractController
 
         // Créez une réponse avec le fichier en tant que contenu
         return new BinaryFileResponse($filePath);
+    }
+
+    
+    /**
+    * @OA\GET(
+    *     path="/api/participes/validateJustificatif/{filename}",
+    *     summary="Valide le justificatif",
+    *     tags={"Absences"},
+    *     @OA\Parameter(
+    *         name="filename",
+    *         in="path",
+    *         description="Nom du justificatif",
+    *         required=true,
+    *         @OA\Schema(type="string")
+    *     ),
+    *     @OA\Response(
+    *         response="200",
+    *         description="Justificatif validé"
+    *     )
+    * )
+    */
+    #[Route('/api/participes/validateJustificatif/{filename}', name:"validateJustificatif", methods:['GET'])]
+    public function validateJustificatif(string $filename, ParticipeRepository $participeRepository, EntityManagerInterface $em): JsonResponse 
+    {
+        $participe = $participeRepository->findOneBy(["justificatif" => $filename]);
+
+        if(!$participe){
+            return new JsonResponse(['error' => 'Fichier demandé non trouvée.'], 404);
+        }
+
+        $participe->setJustificatifValide(true);
+
+        $em->persist($participe);
+        $em->flush();
+
+        return new JsonResponse(['success' => "Justificatif validé avec succès."], 200);
+
     }
 }
