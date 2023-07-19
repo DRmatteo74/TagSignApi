@@ -59,6 +59,8 @@ php bin/console doctrine:fixtures:load //Ajoute les données de test /scr/DataFi
 
 ### Etape 8 : Connecter vous à l’API
 
+```localhost:8000/api/login_check```
+
 Pour cela entrer dans le body en JSON :
 
 ```json
